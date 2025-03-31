@@ -1,0 +1,90 @@
+# schema: https://github.com/citation-file-format/citation-file-format/blob/main/schema-guide.md
+
+cff-version: 1.2.0
+
+title: Precision NeuroImaging and Connectomics (PNC)
+
+license: CC0-1.0
+
+type: "software"
+
+repository-code: https://github.com/MICA-MNI/petpipe
+
+message: Data collection of [18F]-mk6240 Tau-PET from the MICA lab, Brain Imaging Center, Montreal Neurologial Institute and Hospital (The Neuro).
+
+identifiers:
+  - description: "The concept DOI of the pre-release version."
+    type: doi
+    value: 10.0000/zenodo.0000000s
+
+keywords:
+  - dataset
+  - tau
+  - pet
+  - MRI
+  - 18f-mk6240
+  - healthy
+  - open data
+  - brain imaging data structure
+  - BIDS
+  - neuroscience
+  - neuroimaging
+  - neuroinformatics
+
+authors:
+  - family-names: Lam
+    given-names: Jack
+    orcid: https://orcid.org/0000-0003-3173-7665
+
+  - family-names: R. Cruces
+    given-names: Raul
+    orcid: https://orcid.org/0000-0001-8002-0877
+
+  - family-names: Royer
+    given-names: Jessica
+    orcid: https://orcid.org/0000-0002-4448-8998
+
+  - family-names: Chen
+    given-names: Judy
+    orcid: https://orcid.org/0009-0004-6332-9935
+
+  - family-names: Sahlas
+    given-names: Ella
+    orcid: https://orcid.org/0000-0002-7119-977X
+
+  - family-names: Thaera
+    given-names: Arafat
+    orcid: 0000-0002-9210-2092
+
+  - family-names: Pana
+    given-names: Raluca
+
+  - family-names: Massarweh
+    given-names: Gassan
+
+  - family-names: Hopewell
+    given-names: Robert
+
+  - family-names: Soucy
+    given-names: Jean-Paul
+
+  - family-names: Caciagli
+    given-names: Lorenzo
+    orcid: https://orcid.org/0000-0001-7189-9699
+
+  - family-names: Villeneuve
+    given-names: Sylvia
+
+  - family-names: Matthias
+    given-names: Koepp
+    orcid: https://orcid.org/0000-0002-4277-8000
+
+  - family-names: Bernasconi
+    given-names: Andrea
+
+  - family-names: Bernasconi
+    given-names: Neda
+
+  - family-names: Bernhardt
+    given-names: Boris
+    orcid: https://orcid.org/0000-0001-9256-6041

@@ -1,0 +1,17 @@
+{
+    "participant_id": {
+      "LongName": "Participant identification label sub-",
+      "Description": "Assigned identification number for a subject. No ‘sub-’"
+    },
+   "site": {
+      "LongName": "Site and scanner information",
+      "Description": "Specify name of site and scanner, e.g. Montreal_SiemmensTerra7T"
+    },
+    "group": {
+      "LongName": "Group",
+      "Levels": {
+        "HC": "Healthy control",
+        "EP": "Epilepsy patient"
+      }
+  }
+}

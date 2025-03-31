@@ -1,0 +1,22 @@
+{
+    "Name": "MICA [18F]MK6240 positron emission tomography (PET)",
+    "BIDSVersion": "2.0.3",
+    "DatasetType": "raw",
+    "License": "CC0 1.0 Universal",
+    "Acknowledgements": "The authors thank all participants who took part in this study. Special thanks to the McConnell Brain Imaging Centre PET Unit",
+    "HowToAcknowledge": "Please cite the dataset: TBD",
+    "Funding": [
+        "RRC: this research was undertaken thanks in part to funding from the Ministère de l’Economie, de l’Innovation et de l’Énergie du Québec and to funding from the Canada First Research Excellence Fund, awarded to the Healthy Brains, Healthy Lives initiative at McGill University",
+        "RRC: Programme de bourse de formation postdoctorale, Fonds de recherche du Québec - Santé 291486"
+      ],
+    "ReferencesAndLinks": [
+        "OSF: TBD",
+        "bioRxiv: TBD"
+    ],
+    "DatasetDOI": "DOI TBD",
+    "GeneratedBy": [
+        {
+          "Name": "Manual"
+        }
+      ]
+  }
