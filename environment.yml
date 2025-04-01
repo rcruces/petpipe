@@ -15,6 +15,7 @@ dependencies:
   - pyvirtualdisplay
   - cmake
   - ninja
+  - dcm2niix
   - pip
   - pip:
     - brainspace==0.1.20
