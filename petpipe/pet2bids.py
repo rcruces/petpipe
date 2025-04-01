@@ -26,7 +26,6 @@ import os
 import glob
 import shutil
 import sys
-import tempfile
 import json
 import subprocess
 import pandas as pd
@@ -37,6 +36,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_dir = os.path.dirname(script_dir)
 
 def info(message):
+    print("-------------------------------------------------------------")
     print(f"[ INFO ] ... {message}")
 
 def warning(message):
@@ -63,20 +63,27 @@ if not all([args.sub, args.pet_dir, args.bids_dir, args.ses, args.micapipe_dir])
     sys.exit(1)
 
 # Normalize paths and variables
-session = f"ses-{args.ses.replace('ses-', '')}"
-subject = f"sub-{args.sub.replace('sub-', '')}"
+session = f"{args.ses.replace('ses-', '')}"
+subject = f"{args.sub.replace('sub-', '')}"
 pet_dir = os.path.realpath(args.pet_dir)
 bids_dir = os.path.realpath(args.bids_dir)
 micapipe_dir = os.path.realpath(args.micapipe_dir)
 subject_dir = os.path.join(f"{bids_dir}/sub-{subject}/ses-{session}")
-t1_files_glob = glob.glob(os.path.join(micapipe_dir, f"sub-{subject}", "ses-01", "anat", "*_space-nativepro_T1w.json"))
+t1_files_glob = glob.glob(f"{micapipe_dir}/sub-{subject}/ses-01/anat/*_space-nativepro_T1w.json")
+
 if not t1_files_glob:
     error(f"No T1w file found for subject {subject} in session ses-01.")
-tmpDir = os.path.realpath(args.tmpDir) if args.tmpDir else tempfile.mkdtemp()
-t1_files = os.path.splitext(t1_files_glob[0])[0]
+else:
+    t1_files = os.path.splitext(t1_files_glob[0])[0]
 
-# Set default values
-tmpDir = tempfile.mkdtemp() if not args.tmpDir else os.path.realpath(args.tmpDir)
+print("\n-------------------------------------------------------------")
+print("         PET pipeline - ECAT to BIDS conversion")
+print("-------------------------------------------------------------")
+print(f"Subject: {subject}")
+print(f"Session: {session}")
+print(f"Source directory: {pet_dir}")
+print(f"BIDS subject directory: {subject_dir}")
+print(f"micapipe directory: {micapipe_dir}\n")
 
 # Overwrite output directory if force is enabled
 if args.force and os.path.exists(subject_dir):
@@ -101,16 +108,6 @@ start_time = time.time()
 
 # Print today's date in mm.dd.yyyy format
 today=datetime.today().strftime('%m.%d.%Y')
-
-print("-------------------------------------------------------------")
-print("         PET pipeline - ECAT to BIDS conversion")
-print("-------------------------------------------------------------")
-print(f"Subject: {subject}")
-print(f"Session: {session}")
-print(f"Input Directory: {pet_dir}")
-print(f"BIDS subject directory: {subject_dir}")
-print(f"Temporary Directory: {tmpDir}")
-print("-------------------------------------------------------------")
 
 # Make Subject Directory
 os.makedirs(subject_dir, exist_ok=True)
@@ -215,9 +212,10 @@ def convert_ecat_to_bids(in_file, out_file, output_dir, json=None):
         merge_json_files(os.path.join(output_dir, f"{out_file}.json"), json)
 
 # -----------------------------------------------------------------------------------
+info("Creating NIFTIS from source ECAT")
 # Create the mk6240 NIFTI
 pet_image = BIDSpet_name(trc="mk6240", sub=subject, ses=session, rec="acdyn").build()
-convert_ecat_to_bids(f'{pet_dir}/*EM_4D_MC01.v', pet_image, subject_dir, json=os.path.join(repo_dir, "files/subject_trc-MK6240_pet.json"))
+convert_ecat_to_bids(f'{pet_dir}/*EM_4D_MC01.v', pet_image, f"{subject_dir}/pet", json=os.path.join(repo_dir, "files/subject_trc-MK6240_pet.json"))
 
 # Create the mk6240 transmission
 tx_image = BIDSpet_name(sub=subject, ses=session, desc="LinearAtenuationMap").build()
@@ -241,14 +239,14 @@ for file in mandatory_files:
 
 # ----------------------------------------------------------------------------------
 # Count number of gzipped NIfTI files in different directories
-anat = len(glob.glob(os.path.join(bids_dir, "anat", "**", "*.nii.gz"), recursive=True))
-pet = len(glob.glob(os.path.join(bids_dir, "pet", "**", "*.nii.gz"), recursive=True))
+anat = len(glob.glob(os.path.join(subject_dir, "anat", "**", "*.nii.gz"), recursive=True))
+pet = len(glob.glob(os.path.join(subject_dir, "pet", "**", "*.nii.gz"), recursive=True))
 
 # Check if participants TSV file exists, create it if not
 tsv_file = os.path.join(bids_dir, "participants_bic2bids.tsv")
 if not os.path.isfile(tsv_file):
     # Create the header if the file does not exist
-    header = ["sub", "ses", "date", "N.anat", "N.pet", "source", "user", "processing.time"]
+    header = ["subject_id", "date", "N.anat", "N.pet", "source", "user", "processing.time"]
     df = pd.DataFrame(columns=header)
     df.to_csv(tsv_file, sep='\t', index=False)
 
@@ -270,21 +268,14 @@ new_subject = {"participant_id": f"sub-{subject}", "site": "Montreal_SiemmensPET
 df = pd.concat([df, pd.DataFrame([new_subject])], ignore_index=True)
 df.to_csv(participants_tsv, sep='\t', index=False)
 
-# Create and update sessions TSV for the subject
+# Handle sessions
 sessions_tsv = os.path.join(bids_dir, f"sub-{subject}/sub-{subject}_sessions.tsv")
-if not os.path.isfile(sessions_tsv):
-    # Create the header if the file doesn't exist
-    pd.DataFrame(columns=["session_id"]).to_csv(sessions_tsv, sep='\t', index=False)
+all_ses = glob.glob(os.path.join(f"{bids_dir}/sub-{subject}/ses-*"))
+all_ses = [os.path.basename(s)[4:] for s in all_ses]
 
-# Remove existing entry if it exists
-df_sessions = pd.read_csv(sessions_tsv, sep='\t')
-df_sessions = df_sessions[df_sessions["session_id"] != session]
-
-# Add session info
-new_session_row = pd.DataFrame([{"session_id": session}])
-df_sessions = pd.concat([df_sessions, new_session_row], ignore_index=True)
+# Create a dataframe with columns=["session_id"] and all the  all_ses
+df_sessions = pd.DataFrame(all_ses, columns=["session_id"])
 df_sessions.to_csv(sessions_tsv, sep='\t', index=False)
-
 
 # -----------------------------------------------------------------------------------
 # Capture the end time
@@ -300,48 +291,33 @@ time_difference_minutes = time_difference / 60
 formatted_time = f"{time_difference_minutes:.3f}"
 
 # Print the result with some colored output (for terminal)
-print("----------------------------------------------------------------------------")
 print(f"Ecat to BIDS running time: \033[38;5;220m {formatted_time} minutes \033[38;5;141m")
+print("----------------------------------------------------------------------------\n")
 
 # -----------------------------------------------------------------------------------
 # Add data to participants_7t2bids.tsv
 df_participants_bic2bids = pd.read_csv(tsv_file, sep='\t')
+
+# Remove any rows with the same subject and session (id)
+id = f"{subject}_{session}"
+df_participants_bic2bids = df_participants_bic2bids[df_participants_bic2bids["subject_id"] != id]
+
+# Create the new row as a dictionary
 new_row = {
-    "sub": subject,
-    "ses": session,
+    "subject_id": id,
     "date": today,
     "N.anat": anat,
-    "N.dwi": pet,
-    "user": os.getenv("USER", "unknown_user"),
+    "N.pet": pet,
+    "source": pet_dir,
     "user": os.getenv("USER"),
-    "processing.time": time_difference
+    "processing.time": formatted_time
 }
 
-# Check if the row already exists based on "sub" and "ses"
-def find_existing_row_index(df, sub, ses):
-    """
-    Find the index of an existing row in the DataFrame based on subject and session.
+# Convert the dictionary to a DataFrame
+new_row_df = pd.DataFrame([new_row])
 
-    Args:
-        df (pd.DataFrame): The DataFrame to search.
-        sub (str): Subject identifier.
-        ses (str): Session identifier.
+# Concatenate the new row DataFrame with the existing DataFrame
+df_participants_bic2bids = pd.concat([df_participants_bic2bids, new_row_df], ignore_index=True)
 
-    Returns:
-        pd.Index: Index of the matching row(s).
-    """
-    return df[(df["sub"] == sub) & (df["ses"] == ses)].index
-existing_row_index = find_existing_row_index(df_participants_bic2bids, new_row["sub"], new_row["ses"])
-
-# If the row exists, overwrite it, otherwise append the new row
-if not existing_row_index.empty:
-    # Overwrite the existing row
-    # Ensure column alignment before assignment
-    aligned_new_row = pd.DataFrame([new_row], columns=df_participants_bic2bids.columns)
-    df_participants_bic2bids.loc[existing_row_index] = aligned_new_row.iloc[0]
-else:
-    # Append the new row
-    new_row_df = pd.DataFrame([new_row])
-    df_participants_bic2bids = pd.concat([df_participants_bic2bids, new_row_df], ignore_index=True)
-
+# Write the updated DataFrame back to the tsv file
 df_participants_bic2bids.to_csv(tsv_file, sep='\t', index=False)
