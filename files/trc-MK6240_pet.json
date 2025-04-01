@@ -4,7 +4,7 @@
     "InstitutionalDepartmentName": "PET Unit of The Neuro",
     "Manufacturer": "Siemens",
     "ManufacturersModelName": "High-Resolution Research Tomograph",
-    "ProtocolName": "HC10-MK-HRRT",
+    "ProtocolName": "MK-HRRT",
     "BodyPart": "Brain",
     "Units": "Bq/ml",
     "TracerName": "MK6240",

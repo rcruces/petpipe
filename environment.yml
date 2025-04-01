@@ -13,6 +13,8 @@ dependencies:
   - networkx
   - statsmodels
   - pyvirtualdisplay
+  - cmake
+  - ninja
   - pip
   - pip:
     - brainspace==0.1.20
@@ -23,6 +25,7 @@ dependencies:
     - scipy>=0.17.0
     - osfclient
     - xhtml2pdf
-    - dcm2niix
     - antspyx
+    - dcm2niixpy
+    - ipykernel
 prefix: /opt/anaconda3/envs/petpipe
