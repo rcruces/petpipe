@@ -9,8 +9,10 @@ def info(message):
     print(f"[ INFO ] ... {message}")
 
 def warning(message):
+    print("-------------------------------------------------------------")
     print(f"[ WARNING ] ... {message}")
-
+    print("-------------------------------------------------------------")
+    
 def error(message):
     print(f"[ ERROR ] ... {message}")
 

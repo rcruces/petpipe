@@ -67,6 +67,7 @@ t1_files_glob = glob.glob(f"{micapipe_dir}/sub-{subject}/ses-01/anat/*_space-nat
 
 if not t1_files_glob:
     error(f"No T1w file found for subject {subject} in session ses-01.")
+    t1_files=None
 else:
     t1_files = os.path.splitext(t1_files_glob[0])[0]
 
@@ -120,12 +121,13 @@ tx_image = BIDSpetName(sub=subject, ses=session, desc="LinearAtenuationMap").bui
 convert_ecat_to_bids(f"{pet_dir}/Transmission/*TX.v", tx_image, f"{subject_dir}/pet")
 
 # -----------------------------------------------------------------------------------
-# Copy the T1w image to BIDS directory
-t1_str = BIDSName(suffix="T1w", sub=subject, ses=session).build()
+if t1_files is not None:
+    # Copy the T1w image to BIDS directory
+    t1_str = BIDSName(suffix="T1w", sub=subject, ses=session).build()
 
-# Copy the files
-shutil.copy2(f"{t1_files}.json", os.path.join(subject_dir, f"anat/{t1_str}.json"))
-shutil.copy2(f"{t1_files}.nii.gz", os.path.join(subject_dir, f"anat/{t1_str}.nii.gz"))
+    # Copy the files
+    shutil.copy2(f"{t1_files}.json", os.path.join(subject_dir, f"anat/{t1_str}.json"))
+    shutil.copy2(f"{t1_files}.nii.gz", os.path.join(subject_dir, f"anat/{t1_str}.nii.gz"))
 
 # -----------------------------------------------------------------------------------
 # Copy mandatory files for BIDS compliance
