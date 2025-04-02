@@ -1,12 +1,12 @@
 {
     "InjectedRadioactivity": "",
     "InjectedMass": "",
-    "MolarActivityMeasTime": "",
     "SpecificRadioactivity": "",
     "MolarActivity": "",
-    "MolarActivity_decay_corrected": "",
+    "MolarActivityMeasTime": "",
     "TimeZero": "",
-    "InjectionTime": "",
     "InjectionStart": "",
+    "InjectionTime": "",
+    "MolarActivity_decay_corrected": "",
     "ScanTime": ""
   }

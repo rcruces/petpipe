@@ -111,6 +111,7 @@ os.makedirs(os.path.join(subject_dir, "pet"), exist_ok=True)
 # -----------------------------------------------------------------------------------
 info("Creating NIFTIS from source ECAT")
 # Create the mk6240 NIFTI
+# OPTIONAL json keys: {"InjectionTime", "MolarActivity_decay_corrected", "ScanTime"}
 pet_image = BIDSpetName(trc="mk6240", sub=subject, ses=session, rec="acdyn").build()
 convert_ecat_to_bids(f'{pet_dir}/*EM_4D_MC01.v', pet_image, f"{subject_dir}/pet", json=os.path.join(repo_dir, "files/subject_trc-MK6240_pet.json"))
 
