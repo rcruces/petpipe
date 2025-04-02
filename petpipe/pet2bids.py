@@ -11,6 +11,7 @@ The script requires the following arguments:
     -micapipe   : Path to micapipe derivatives directory
     -tmpDir     : Specify location of temporary directory <path> (Default is /tmp)
     -force      : Will overwrite files
+    -bids_validator: Run BIDS validator
 The script creates a temporary directory for processing and cleans up after itself.
 It also checks for the existence of required files and directories before proceeding.
 The script is designed to be run from the command line and requires Python 3.x.
@@ -23,11 +24,10 @@ Copyright (c) 2025 MICA-MNI
 """
 import argparse
 import os
+import sys
 import glob
 import shutil
-import sys
-import json
-import subprocess
+
 import pandas as pd
 from datetime import datetime
 
@@ -38,16 +38,6 @@ from utils import *
 script_dir = os.path.dirname(os.path.abspath(__file__))
 repo_dir = os.path.dirname(script_dir)
 
-def info(message):
-    print("-------------------------------------------------------------")
-    print(f"[ INFO ] ... {message}")
-
-def warning(message):
-    print(f"[ WARNING ] ... {message}")
-
-def error(message):
-    print(f"[ ERROR ] ... {message}")
-
 # Argument Parsing
 parser = argparse.ArgumentParser(add_help=True)
 parser.add_argument("-sub", type=str, required=True, help="Subject identification")
@@ -57,6 +47,7 @@ parser.add_argument("-bids", dest="bids_dir", type=str, required=True, help="Pat
 parser.add_argument("-micapipe", dest="micapipe_dir", type=str, required=False, help="Path to micapipe derivatives directory", default="/data_/mica3/BIDS_MICs/derivatives/micapipe_v0.2.0")
 parser.add_argument("-tmpDir", type=str, default="/tmp", help="Specify location of temporary directory (default: /tmp)")
 parser.add_argument("-force", action="store_true", help="Overwrite files")
+parser.add_argument("-bids_validator", action="store_true", help="Run BIDS validator")
 args = parser.parse_args()
 
 # Validate mandatory arguments
@@ -120,16 +111,16 @@ os.makedirs(os.path.join(subject_dir, "pet"), exist_ok=True)
 # -----------------------------------------------------------------------------------
 info("Creating NIFTIS from source ECAT")
 # Create the mk6240 NIFTI
-pet_image = BIDSpet_name(trc="mk6240", sub=subject, ses=session, rec="acdyn").build()
+pet_image = BIDSpetName(trc="mk6240", sub=subject, ses=session, rec="acdyn").build()
 convert_ecat_to_bids(f'{pet_dir}/*EM_4D_MC01.v', pet_image, f"{subject_dir}/pet", json=os.path.join(repo_dir, "files/subject_trc-MK6240_pet.json"))
 
 # Create the mk6240 transmission
-tx_image = BIDSpet_name(sub=subject, ses=session, desc="LinearAtenuationMap").build()
+tx_image = BIDSpetName(sub=subject, ses=session, desc="LinearAtenuationMap").build()
 convert_ecat_to_bids(f"{pet_dir}/Transmission/*TX.v", tx_image, f"{subject_dir}/pet")
 
 # -----------------------------------------------------------------------------------
 # Copy the T1w image to BIDS directory
-t1_str = BIDS_name(suffix="T1w", sub=subject, ses=session).build()
+t1_str = BIDSName(suffix="T1w", sub=subject, ses=session).build()
 
 # Copy the files
 shutil.copy2(f"{t1_files}.json", os.path.join(subject_dir, f"anat/{t1_str}.json"))
@@ -137,7 +128,7 @@ shutil.copy2(f"{t1_files}.nii.gz", os.path.join(subject_dir, f"anat/{t1_str}.nii
 
 # -----------------------------------------------------------------------------------
 # Copy mandatory files for BIDS compliance
-mandatory_files = ["CITATION.cff", "dataset_description.json", ".bidsignore", "participants.json", "trc-MK6240_pet.json", "README"]
+mandatory_files = ["CITATION.cff", "dataset_description.json", ".bidsignore", "participants.json", "trc-mk6240_rec-acdyn_pet.json", "README"]
 for file in mandatory_files:
     source_path = os.path.join(repo_dir, "files", file)
     dest_path = os.path.join(bids_dir, file)
@@ -195,6 +186,12 @@ time_difference_minutes = time_difference / 60
 
 # Format the time difference to 3 decimal places
 formatted_time = f"{time_difference_minutes:.3f}"
+
+# -----------------------------------------------------------------------------------
+# Run BIDS validator
+if args.bids_validator:
+    command = f'deno run --allow-write -ERN jsr:@bids/validator {bids_dir} --ignoreWarnings --outfile {bids_dir}/bids_validator_output.txt'
+    run_command(command)
 
 # Print the result with some colored output (for terminal)
 print(f"Ecat to BIDS running time: \033[38;5;220m {formatted_time} minutes \033[38;5;141m")

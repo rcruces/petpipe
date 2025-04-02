@@ -85,6 +85,13 @@ def merge_json_files(json_pet, json_subject):
 
     print(f"Updated JSON saved to: {json_pet}")
 
+def run_command(command):
+    try:
+        print(f"Running command: {command}")
+        subprocess.run(command.split(), check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred while running command: Exception: {e}")
+
 def convert_ecat_to_bids(in_file, out_file, output_dir, json=None):
     """
     Convert ECAT files to BIDS format using dcm2niix.

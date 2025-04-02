@@ -1,3 +1,4 @@
 # Files to ignore
 sub*/ses*/*/*desc-*
 participants_bic2bids.tsv
+bids_validator_output.txt

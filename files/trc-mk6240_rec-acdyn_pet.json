@@ -16,7 +16,7 @@
     "SpecificRadioactivityUnits": "mCi/umol",
     "ModeOfAdministration": "Bolus",
     "MolarActivityUnits": "mCi/umol",
-    "FrameTimeStart": [0, 300, 600, 900],
+    "FrameTimesStart": [0, 300, 600, 900],
     "FrameDuration": [300, 300, 300, 300],
     "ScanStart": 0,
     "AcquisitionMode": "list mode",
