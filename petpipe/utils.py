@@ -4,17 +4,35 @@ import os
 import json
 import subprocess
 
+class bcolors:
+    PURPLE = '\033[95m'
+    TEAL = '\033[38;5;37m'
+    WARNING = '\033[38;5;220m'
+    ERROR = '\033[38;5;1m'
+    ENDC = '\033[0m'
+    CIAN = '\033[38;5;45m'
+    BOLD = '\033[1m'
+
+    def disable(self):
+        self.INFO = ''
+        self.TEAL = ''
+        self.WARNING = ''
+        self.ERROR = ''
+        self.CIAN = ''
+        self.BOLD = ''
+        self.ENDC = ''
+
 def info(message):
-    print("-------------------------------------------------------------")
-    print(f"[ INFO ] ... {message}")
+    print(f"{bcolors.CIAN}  Info ... {message}{bcolors.ENDC}\n")
 
 def warning(message):
-    print("-------------------------------------------------------------")
-    print(f"[ WARNING ] ... {message}")
-    print("-------------------------------------------------------------")
-    
+    print(f"\n{bcolors.WARNING}  Warning ... {message}{bcolors.ENDC}\n")
+
 def error(message):
-    print(f"[ ERROR ] ... {message}")
+    print(f"{bcolors.ERROR}  Error ... {message}{bcolors.ENDC}\n")
+
+def note(message):
+    print(f"{bcolors.PURPLE}{message}{bcolors.ENDC}\n")
 
 class BIDSpetName:
     def __init__(self, **kwargs):

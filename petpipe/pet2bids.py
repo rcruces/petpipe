@@ -71,14 +71,14 @@ if not t1_files_glob:
 else:
     t1_files = os.path.splitext(t1_files_glob[0])[0]
 
-print("\n-------------------------------------------------------------")
-print("         PET pipeline - ECAT to BIDS conversion")
-print("-------------------------------------------------------------")
-print(f"Subject: {subject}")
-print(f"Session: {session}")
-print(f"Source directory: {pet_dir}")
-print(f"BIDS subject directory: {subject_dir}")
-print(f"micapipe directory: {micapipe_dir}\n")
+print(f"\n{bcolors.TEAL}-------------------------------------------------------------")
+print(f"   PET pipeline - ECAT to BIDS conversion  ")
+print(f"-------------------------------------------------------------{bcolors.ENDC}")
+print(f"   {bcolors.TEAL}Subject:{bcolors.ENDC} {subject}")
+print(f"   {bcolors.TEAL}Session:{bcolors.ENDC} {session}")
+print(f"   {bcolors.TEAL}Source directory:{bcolors.ENDC} {pet_dir}")
+print(f"   {bcolors.TEAL}BIDS subject directory:{bcolors.ENDC} {subject_dir}")
+print(f"   {bcolors.TEAL}micapipe directory:{bcolors.ENDC} {micapipe_dir}\n")
 
 # Overwrite output directory if force is enabled
 if args.force and os.path.exists(subject_dir):
@@ -113,14 +113,17 @@ os.makedirs(os.path.join(subject_dir, "pet"), exist_ok=True)
 info("Creating NIFTIS from source ECAT")
 # Create the mk6240 NIFTI
 # OPTIONAL json keys: {"InjectionTime", "MolarActivity_decay_corrected", "ScanTime"}
-pet_image = BIDSpetName(trc="mk6240", sub=subject, ses=session, rec="acdyn").build()
-convert_ecat_to_bids(f'{pet_dir}/*EM_4D_MC01.v', pet_image, f"{subject_dir}/pet", json=os.path.join(repo_dir, "files/subject_trc-MK6240_pet.json"))
+pet_image = BIDSpetName(trc="mk6240", sub=subject, ses=session).build()
+note(f"  BIDS name: {pet_image}")
+convert_ecat_to_bids(f'{pet_dir}/*EM_4D_MC01.v', pet_image, f"{subject_dir}/pet", json=os.path.join(repo_dir, "files/trc-mk6240_pet_subject.json"))
 
 # Create the mk6240 transmission
 tx_image = BIDSpetName(sub=subject, ses=session, desc="LinearAtenuationMap").build()
+note(f"\n  BIDS name: {tx_image}")
 convert_ecat_to_bids(f"{pet_dir}/Transmission/*TX.v", tx_image, f"{subject_dir}/pet")
 
 # -----------------------------------------------------------------------------------
+info("Copying T1w image from MICs to BIDS directory")
 if t1_files is not None:
     # Copy the T1w image to BIDS directory
     t1_str = BIDSName(suffix="T1w", sub=subject, ses=session).build()
@@ -130,8 +133,9 @@ if t1_files is not None:
     shutil.copy2(f"{t1_files}.nii.gz", os.path.join(subject_dir, f"anat/{t1_str}.nii.gz"))
 
 # -----------------------------------------------------------------------------------
+info("Creating files for BIDS compliance")
 # Copy mandatory files for BIDS compliance
-mandatory_files = ["CITATION.cff", "dataset_description.json", ".bidsignore", "participants.json", "trc-mk6240_rec-acdyn_pet.json", "README"]
+mandatory_files = ["CITATION.cff", "dataset_description.json", ".bidsignore", "participants.json", "trc-mk6240_pet.json", "README"]
 for file in mandatory_files:
     source_path = os.path.join(repo_dir, "files", file)
     dest_path = os.path.join(bids_dir, file)
@@ -206,8 +210,9 @@ if args.bids_validator:
 os.chmod(bids_validator, 0o777)
 
 # Print the result with some colored output (for terminal)
-print(f"Ecat to BIDS running time: \033[38;5;220m {formatted_time} minutes \033[38;5;141m")
-print("----------------------------------------------------------------------------\n")
+print(f"{bcolors.TEAL}----------------------------------------------------------------------------")
+print(f"  Ecat to BIDS running time: {formatted_time} minutes")
+print(f"----------------------------------------------------------------------------\n{bcolors.ENDC}")
 
 # -----------------------------------------------------------------------------------
 # Add data to participants_7t2bids.tsv
