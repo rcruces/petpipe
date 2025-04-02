@@ -190,7 +190,7 @@ formatted_time = f"{time_difference_minutes:.3f}"
 
 # -----------------------------------------------------------------------------------
 # Run BIDS validator
-bids_validator = "{bids_dir}/bids_validator_output.txt"
+bids_validator = f"{bids_dir}/bids_validator_output.txt"
 if args.bids_validator:
     command = f'deno run --allow-write -ERN jsr:@bids/validator {bids_dir} --ignoreWarnings --outfile {bids_validator}'
     run_command(command)
