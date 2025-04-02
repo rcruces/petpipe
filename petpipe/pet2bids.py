@@ -190,9 +190,16 @@ formatted_time = f"{time_difference_minutes:.3f}"
 
 # -----------------------------------------------------------------------------------
 # Run BIDS validator
+def run_command(command):
+    try:
+        print(f"Running command: {command}")
+        subprocess.run(command, check=True, shell=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred while running command: Exception: {e}")
+
 bids_validator = f"{bids_dir}/bids_validator_output.txt"
 if args.bids_validator:
-    command = f'deno run --allow-write -ERN jsr:@bids/validator {bids_dir} --ignoreWarnings --outfile {bids_validator}'
+    command = f'deno run --allow-env --allow-read --allow-write jsr:@bids/validator {bids_dir} --ignoreWarnings --outfile {bids_validator}'
     run_command(command)
 os.chmod(bids_validator, 0o777)
 
