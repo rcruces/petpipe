@@ -190,9 +190,11 @@ formatted_time = f"{time_difference_minutes:.3f}"
 
 # -----------------------------------------------------------------------------------
 # Run BIDS validator
+bids_validator = "{bids_dir}/bids_validator_output.txt"
 if args.bids_validator:
-    command = f'deno run --allow-write -ERN jsr:@bids/validator {bids_dir} --ignoreWarnings --outfile {bids_dir}/bids_validator_output.txt'
+    command = f'deno run --allow-write -ERN jsr:@bids/validator {bids_dir} --ignoreWarnings --outfile {bids_validator}'
     run_command(command)
+os.chmod(bids_validator, 0o777)
 
 # Print the result with some colored output (for terminal)
 print(f"Ecat to BIDS running time: \033[38;5;220m {formatted_time} minutes \033[38;5;141m")
