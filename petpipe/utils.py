@@ -14,7 +14,7 @@ def warning(message):
 def error(message):
     print(f"[ ERROR ] ... {message}")
 
-class BIDSPetName:
+class BIDSpetName:
     def __init__(self, **kwargs):
         self.keys = ["sub", "ses", "task", "trc", "rec", "run", "desc"]
         self.values = kwargs

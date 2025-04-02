@@ -27,6 +27,5 @@ dependencies:
     - osfclient
     - xhtml2pdf
     - antspyx
-    - dcm2niixpy
     - ipykernel
 prefix: /opt/anaconda3/envs/petpipe
