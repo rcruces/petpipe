@@ -24,7 +24,7 @@ TMPDIR="/host/yeatman/local_raid/rcruces/tmp/tmpfiles"
 # Handle variables
 sub=${sub/sub-}
 ses=${ses/ses-}
-subject_id=${sub}_${ses}
+subject_id="sub-${sub}_ses-${ses}"
 
 # Temporary directory path
 tmp=${TMPDIR}
@@ -34,7 +34,7 @@ t1=${bids_dir}/sub-${sub}/ses-${ses}/anat/${subject_id}_T1w.nii.gz
 
 # Output directory
 SUBJECTS_DIR=${out}/fastsurfer/
-export $SUBJECTS_DIR
+export SUBJECTS_DIR
 
 # Create output directory if it does not exist
 if [ ! -d "${SUBJECTS_DIR}" ]; then
