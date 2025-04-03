@@ -16,6 +16,7 @@ dependencies:
   - cmake
   - ninja
   - dcm2niix
+  - petpvc
   - pip
   - pip:
     - brainspace==0.1.20
