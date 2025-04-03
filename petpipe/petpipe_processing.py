@@ -23,10 +23,9 @@ import glob
 import shutil
 import sys
 import tempfile
-import json
-import subprocess
 import pandas as pd
 from datetime import datetime
+import ants
 
 # Set the working directory to the script's location
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -36,15 +35,17 @@ repo_dir = os.path.dirname(script_dir)
 parser = argparse.ArgumentParser(add_help=True)
 parser.add_argument("-sub", type=str, required=True, help="Subject identification")
 parser.add_argument("-ses", type=str, required=True, help="Session")
-parser.add_argument("-pet_dir", dest="pet_dir", type=str, required=True, help="Input directory with raw PET images")
 parser.add_argument("-bids", dest="bids_dir", type=str, required=True, help="Path to BIDS directory ( . or FULL PATH)")
-parser.add_argument("-micapipe", dest="micapipe_dir", type=str, required=False, help="Path to micapipe derivatives directory", default="/data_/mica3/BIDS_MICs/derivatives/micapipe_v0.2.0")
+parser.add_argument("-pet_str", dest="pet_str", type=str, required=False, help="String to identify the PET image in the BIDS directory")
+parser.add_argument("-pet_ref", dest="pet_ref", type=str, required=False, help="Image in PET space to be used as reference for registration")
+parser.add_argument("-T1w_str", dest="T1w_str", type=str, required=False, help="String to identify the T1w image in the BIDS directory")
+parser.add_argument("-surf_dir", dest="micapipe_dir", type=str, required=False, help="Path to the surface directory (freesurfer or fastsurfer)")
 parser.add_argument("-tmpDir", type=str, default="/tmp", help="Specify location of temporary directory (default: /tmp)")
 parser.add_argument("-force", action="store_true", help="Overwrite files")
 args = parser.parse_args()
 
 # Validate mandatory arguments
-if not all([args.sub, args.pet_dir, args.bids_dir, args.ses, args.micapipe_dir]):
+if not all([args.sub, args.ses, args.bids]):
     print("Error: One or more mandatory arguments are missing.")
     parser.print_help()
     sys.exit(1)
@@ -52,25 +53,40 @@ if not all([args.sub, args.pet_dir, args.bids_dir, args.ses, args.micapipe_dir])
 # Normalize paths and variables
 session = f"{args.ses.replace('ses-', '')}"
 subject = f"{args.sub.replace('sub-', '')}"
-pet_dir = os.path.realpath(args.pet_dir)
 bids_dir = os.path.realpath(args.bids_dir)
-micapipe_dir = os.path.realpath(args.micapipe_dir)
 subject_dir = os.path.join(f"{bids_dir}/sub-{subject}/ses-{session}")
-t1_files_glob = glob.glob(f"{micapipe_dir}/sub-{subject}/ses-01/anat/*_space-nativepro_T1w.json")
 
-if not t1_files_glob:
-    error(f"No T1w file found for subject {subject} in session ses-01.")
+# Check if the pet string is provided
+if args.pet_str == False:
+    pet_trc = glob.glob(os.path.join(f"{subject_dir}/pet/sub-{subject}_ses-{session}_*trc-*_pet.nii.gz"))
 else:
-    t1_files = os.path.splitext(t1_files_glob[0])[0]
+    pet_trc = glob.glob(os.path.join(f"{subject_dir}/pet/sub-{subject}_ses-{session}_{args.pet_str}.nii.gz"))
+
+# Check if the T1w string is provided
+if args.T1w_str == False:
+    t1w = glob.glob(os.path.join(f"{subject_dir}/anat/sub-{subject}_ses-{session}_*T1w*.nii.gz"))
+else:
+    t1w = glob.glob(os.path.join(f"{subject_dir}/anat/sub-{subject}_ses-{session}_{args.T1w_str}.nii.gz"))
+
+# If the reference is proved pet_ref is __self__ otherwise is the pet_trc
+if args.pet_ref == False:
+    pet_ref = pet_trc
+else:
+    pet_ref = glob.glob(os.path.join(f"{subject_dir}/pet/sub-{subject}_ses-{session}_{args.pet_ref}.nii.gz"))
+    # Check if the pet reference exists
+    if not pet_ref:           
+        print(f"Error: The reference image {args.pet_ref} does not exist in the directory {subject_dir}/pet")
+        sys.exit(1)
 
 print("\n-------------------------------------------------------------")
-print("         PET pipeline - ECAT to BIDS conversion")
+print("         PET pipeline - Processing")
 print("-------------------------------------------------------------")
 print(f"Subject: {subject}")
 print(f"Session: {session}")
-print(f"Source directory: {pet_dir}")
 print(f"BIDS subject directory: {subject_dir}")
-print(f"micapipe directory: {micapipe_dir}")
+print(f"PET tracer: {pet_trc}")
+print(f"T1w image: {t1w}")
+print(f"Reference image: {pet_ref}")
 print("-------------------------------------------------------------\n\n")
 
 tmpDir = os.path.realpath(args.tmpDir) if args.tmpDir else tempfile.mkdtemp()
@@ -78,23 +94,6 @@ tmpDir = os.path.realpath(args.tmpDir) if args.tmpDir else tempfile.mkdtemp()
 # Set default values
 tmpDir = tempfile.mkdtemp() if not args.tmpDir else os.path.realpath(args.tmpDir)
 print(f"Temporary Directory: {tmpDir}")
-
-# Overwrite output directory if force is enabled
-if args.force and os.path.exists(subject_dir):
-    shutil.rmtree(subject_dir)
-
-# Check inputs
-if not os.path.exists(f"{t1_files}.json"):
-    warning(f"Subject {subject}_{session} does NOT have a T1")
-if not os.path.isdir(args.pet_dir):
-    error(f"Input directory does not exist: {pet_dir}")
-    sys.exit(1)
-if not os.path.isdir(args.bids_dir):
-    print(f"Output directory does not exist: {bids_dir}")
-    sys.exit(1)
-if os.path.isdir(subject_dir):
-    error(f"Output directory already exists. Use -force to overwrite: {subject_dir}")
-    sys.exit(1)
 
 # Timer & beginning
 import time
@@ -127,13 +126,21 @@ os.makedirs(os.path.join(subject_dir, "pet"), exist_ok=True)
 # methods = {compositeROI, cerebellarGM, brainsteam} 
 
 # -----------------------------------------------------------------------------------
+# Calculate probabilistic gray matter mask (ARTROPOS)
+# https://antspyx.readthedocs.io/en/latest/ants.segmentation.html
+# https://antspyx.readthedocs.io/en/latest/ants.segmentation.html#module-ants.segmentation.atropos
+ants.segmentation.atropos.atropos(a, x, i='Kmeans[3]', m='[0.2,1x1]', c='[5,0]', priorweight=0.25, **kwargs)
+
+# -----------------------------------------------------------------------------------
 # Partial volume correction
 # methods = {MG, GMprob} MG:Muller-Gartner
-
-# Calculate probabilistic gray matter mask
-
-
-
+echo "Performing PVC"
+for norm in cerebellarGM compositeROI; do
+	/host/fladgate/local_raid/jack/programs/scripts/anaconda3/bin/petpvc -i ${out_dir}/ses-${ses}/tmp/sub-${subj}_ses-${ses}_MK6240_norm_${norm}_nativepro.nii.gz \
+	-m ${out_dir}/ses-${ses}/tmp/sub-${subj}_ses-${ses}_tissue_mask.nii.gz \
+	-o ${out_dir}/ses-${ses}/pet/sub-${subj}_ses-${ses}_MK6240_norm_${norm}_PVC-MG_nativepro.nii.gz \
+	--pvc MG -x 2.4 -y 2.4 -z 2.4
+done
 
 # -----------------------------------------------------------------------------------
 # Capture the end time

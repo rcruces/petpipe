@@ -36,6 +36,11 @@ t1=${bids_dir}/sub-${sub}/ses-${ses}/anat/${subject_id}_T1w.nii.gz
 SUBJECTS_DIR=${out}/fastsurfer/
 export $SUBJECTS_DIR
 
+# Create output directory if it does not exist
+if [ ! -d "${SUBJECTS_DIR}" ]; then
+    mkdir -p ${SUBJECTS_DIR}
+fi
+
 # Run singularity
 singularity exec --writable-tmpfs --containall \
                       -B "${SUBJECTS_DIR}":/output \
