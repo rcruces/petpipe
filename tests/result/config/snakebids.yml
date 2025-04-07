@@ -1,0 +1,41 @@
+plugins.version.version: 0.1.0
+analysis_levels:
+- participant
+targets_by_analysis_level:
+  participant: &id001
+  - all
+pybids_inputs:
+  t1w:
+    filters:
+      suffix: T1w
+    wildcards:
+    - subject
+  bold:
+    filters:
+      suffix: bold
+    wildcards:
+    - subject
+    - run
+parse_args:
+containers:
+snakemake_args:
+- -c1
+pybidsdb_reset: false
+pybidsdb_dir:
+pybids_db_dir:
+pybids_db_reset: <!DEPRECATED!>0<!DEPRECATED!>
+snakemake_target: *id001
+bids_dir: C:\Users\10079\Documents\Work\petpipe\tests\data
+output_dir: C:\Users\10079\Documents\Work\petpipe\tests\result
+analysis_level: participant
+participant_label:
+exclude_participant_label:
+derivatives: false
+plugins.validator.skip: false
+plugins.validator.success: false
+snakemake_version: 9.1.6
+snakebids_version: 0.14.0
+root: ''
+app_version: 0.1.0
+snakemake_dir: C:\Users\10079\Documents\Work\petpipe\petpipe
+snakefile: C:\Users\10079\Documents\Work\petpipe\petpipe\workflow\Snakefile

@@ -8,8 +8,7 @@ setup(
     description="BIDS-compliant processing pipeline for PET imaging using python",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    packages=find_packages(where="src"),  # Adjust depending on your structure
-    package_dir={"": "petpipe"},  
+    packages=find_packages(),  # This will find the petpipe package directly
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
