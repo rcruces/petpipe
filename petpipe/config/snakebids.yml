@@ -18,9 +18,13 @@ targets_by_analysis_level:
 pybids_inputs:
   t1w:
     filters:
-      suffix: T1w
+      suffix: "T1w"
+      extension: ".nii.gz"
     wildcards:
       - subject
+      - session
+      - acquisition
+      - run
   bold:
     filters:
       suffix: bold
@@ -35,3 +39,18 @@ parse_args:
 # Docker and singularity containers may be defined here
 containers:
     # fsl: 'docker://brainlife/fsl/6.0.0'
+
+# Configuration for hippunfold
+singularity_containers:
+  hippunfold: "/data/mica1/01_programs/singularity/hippunfold_v1.4.1.sif"
+  fastsurfer: "/data/mica1/01_programs/fastsurfer/fastsurfer-cpu-v2.4.2.sif"
+
+hippunfold_cache_dir: "/host/yeatman/local_raid/rcruces/cache/hippunfold"
+snakemake_output_cache: "/host/yeatman/local_raid/rcruces/cache/snakemake"
+hippunfold_output_subdir: "hippunfold_v1.4.1"
+
+freesurfer_license: "/data_/mica1/01_programs/freesurfer-7.3.2/license.txt"
+tmp_dir: "/host/yeatman/local_raid/rcruces/tmp/tmpfiles"
+fastsurfer_output_subdir: "fastsurfer"
+threads: 15
+use_session: true  # Set to false if not using sessions
