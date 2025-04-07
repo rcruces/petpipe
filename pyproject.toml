@@ -1,0 +1,28 @@
+[project]
+name = "petpipe"
+version = "0.1.0"
+description = "BIDS-compliant processing pipeline for PET imaging using python\n\n"
+readme = "README.md"
+
+authors = [
+    { name = "Raúl RC & Enning Yang", email = "raul.rodriguezcruces@mcgill.ca" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+requires-python = ">=3.8,<4.0"
+dependencies = [
+    "snakebids >=0.14.0",
+    "snakemake>=7.20,<8; python_version < \"3.11\"",
+    "snakemake>=8.1.2; python_version >= \"3.11\"",
+    "pulp < 2.8.0; python_version < \"3.11\"",
+]
+
+[project.scripts]
+petpipe = "petpipe.run:app.run"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta:__legacy__"

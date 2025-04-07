@@ -1,0 +1,5 @@
+include petpipe/**/*.yaml
+include petpipe/**/*.yml
+include petpipe/**/*.json
+include petpipe/**/Snakefile
+include petpipe/**/*.smk
