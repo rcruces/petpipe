@@ -193,6 +193,21 @@ fi
 prob_wm_t1w=${prob_wm}
 
 # ------------------------------
+# PVC | Muller-G  (MG)
+method="MG"
+pet_pvc_mg="${out}/pet/${subject_id}_pvc-${method}_trc-${trc}_pet.nii.gz"
+
+# Create a probability tissue mask
+tissue_mask="${tmp}/${subject_id}_tissue_mask.nii.gz"
+mrcat -force ${prob_gm} ${prob_wm} "${tissue_mask}" -quiet
+
+# Apply the MG-PVC to the pet volume
+petpvc -i "${pet}" \
+	-m "${tissue_mask}" \
+	-o "${pet_pvc_mg}" \
+	--pvc MG -x 2.4 -y 2.4 -z 2.4
+
+# ------------------------------
 # SUVR | brainsteam
 reference="brainsteam"
 atlas_mask=${out}/anat/${subject_id}_atlas-${reference}_T1w_mask.nii.gz
@@ -237,12 +252,15 @@ suvr_csv="${out}/anat/${subject_id}_desc-ReferenceMeanSUVR_trc-${trc}_pet.csv"
 # Write header row
 echo "subject_id,${reference_maks[*]}" | tr ' ' ',' > "$suvr_csv"
 
-# Collect values for each reference
+# Collect values for each reference & normalize-MG
 values=("$subject_id")  # Start with subject ID
 for reference in "${reference_maks[@]}"; do
   pet_avg_csv="${tmp}/${subject_id}_ref-${reference}_trc-${trc}_pet.csv"
   pet_ref=$(awk -F "\t" 'NR==2 {print $4}' "$pet_avg_csv")
   values+=("$pet_ref")
+  # SUVR MG
+  pet_suvr_mg="${out}/pet/${subject_id}_pvc-MG_ref-${reference}_trc-${trc}_pet.nii.gz"
+  fslmaths "$pet_pvc_mg" -div "$pet_ref" "$pet_suvr_mg"
 done
 
 # Append values as a new row
@@ -263,24 +281,6 @@ for reference in ${reference_maks[*]}; do
   pet_suvr="${tmp}/${subject_id}_ref-${reference}_trc-${trc}_pet.nii.gz"
   pet_pvc="${out}/pet/${subject_id}_pvc-${method}_ref-${reference}_trc-${trc}_pet.nii.gz"
   fslmaths "$prob_gm" -mul "$pet_suvr" "$pet_pvc"
-done
-
-# ------------------------------
-# SUVR | Muller-G  (MG)
-method="MG"
-# Create a probability tissue mask
-tissue_mask="${tmp}/${subject_id}_tissue_mask.nii.gz"
-mrcat -force ${prob_gm} ${prob_wm} "${tissue_mask}" -quiet
-
-for reference in ${reference_maks[*]}; do
-  Info "PVC with ${method}"
-  Note "Pet SUVR:" "${reference}"
-  pet_suvr="${tmp}/${subject_id}_ref-${reference}_trc-${trc}_pet.nii.gz"
-  pet_pvc="${out}/pet/${subject_id}_pvc-${method}_ref-${reference}_trc-${trc}_pet.nii.gz"
-	petpvc -i "$pet_suvr" \
-	-m "${tissue_mask}" \
-	-o "$pet_pvc" \
-	--pvc MG -x 2.4 -y 2.4 -z 2.4
 done
 
 # -------------------------------------------------------------------
